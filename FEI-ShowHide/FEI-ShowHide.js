@@ -13,12 +13,19 @@ define(['js/qlik', './properties'], function (qlik, properties) {
 
             // On initial load, get the active visualization ID we should display and initialize the current chart object
             $scope.app = qlik.currApp();
+
             obj.app = qlik.currApp();  //todo: RP
+
             $scope.currentChart = getActiveVisID($scope.component.model.layout.conditionalVis);
             $scope.currentChartModel = null;
 
+            // Get the active visualization ID after the data is updated
+            var chart = getActiveVisID($scope.component.model.layout.conditionalVis);
 
+            //RP: Store the chart ID for later use.
+            obj.chartId = chart;
 
+            // TODO: RP: NOt used method. Only for reference
             $scope.export = function(model) {
                 var exportOpts = {
                     //format: $scope.layout.props.exportFormat,
@@ -26,29 +33,11 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                     filename: 'e:/temp/', //$scope.layout.props.exportFileName,
                     download: true
                 };
-
-                // if ( qlik.table ) {
-                //     var qTable = qlik.table( this );
-                //     qTable.exportData( exportOpts, function( result ) {
-                //         console.log( result );
-                //     } ); //Todo: this will open the link using window.open, so popup-blockers might catch that
-                // } else {
-                //     //console.log('this', this.$parent.$parent.$parent.model);
-                //     //this.$parent.$parent.$parent.model.session("ExportData",null, exportOpts.format, null, exportOpts.fileName, exportOpts.state);
-                // }
-
-                // model.exportData(exportOpts).then(function( reply ) {
-                //     console.log('qUrl', reply);
-                //     //window.open(reply.result.qUrl);
-                //  });
-
                 var table = new qlik.table(model);
                 table.exportData(exportOpts, function (reply) {
                     console.log("EXPORT REPLY: ", reply);
                     alert('EXPORT');
                 });
-
-
             }
 
             // If we do have a chart ID, render the object.
@@ -71,7 +60,7 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                     //vis.show("QV01");
                     console.info("Found chart with ID: ", chart);
                     console.info('Viz: ', vis);
-                    obj.chartId = chart;
+                    obj.chartId = chart; // RP: Store the chart ID
                 });
 
                 // If we do have a chart ID and it's a different one than the currentChart, update the currentChart and then render the new object
@@ -113,9 +102,6 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                 else if($scope.component.model.layout.defaultMasterObject){activeChart = $scope.component.model.layout.defaultMasterObject.split('|')[1]}
                 else{activeChart = null}
 
-                console.log('Condition Results:',conditionResults);
-                console.log('Active Chart is: ', activeChart);
-
                 return activeChart;
             };
 
@@ -128,10 +114,6 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                 if($scope.currentChartModel==null) {
                     $scope.app.getObject($element.find('div'), $scope.currentChart).then(function(model) {
                         $scope.currentChartModel = model;
-
-                        console.log("EXPORTING:TODO:RP1");
-                        console.log(model);
-                        //$scope.export(model);
                     });
                 }
                 else {
@@ -142,17 +124,10 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                             $scope.app.getObject($element.find('div'), $scope.currentChart)
                                 .then(function(model) {
                                 $scope.currentChartModel = model;
-
-                                console.log("EXPORTING:TODO:RP2");
-                                console.log(model);
-                                //console.dir(model.layout.qHyperCube);
-                                //$scope.export(model);
                             });
                         });
                 }
 
-                //todo:RP
-                obj.activeModel = $scope.currentChartModel;
             };
 
             //Destroy any leftover models to avoid memory leaks of unused objects
@@ -192,32 +167,24 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                         tid: "export",
                         icon: "icon-toolbar-sharelist",
                         select: function () {
-
                             console.log('About to export...', obj.c.model);
                             obj.export(obj.c.model);
-
-                            //$('#cl-customreport-container').scope().exportData('exportToExcel');
                         }
                     }), void e.resolve();
         },
         export: function(model) {
 
-                console.log("EXPORT BEGIN...", model);
                 var exportOpts = {
-                    //format: $scope.layout.props.exportFormat,
-                    //state: $scope.layout.props.exportState,
-                    filename: 'zs-export.xlsx', //$scope.layout.props.exportFileName,
-                    download: true
+                    download: true,
+                    filename: model.layout.title
                 };
 
-                // var table = new qlik.table(model);
-                // table.exportData(exportOpts, function (reply) {
-                //     console.log("EXPORT REPLY: ", reply);
-                //     alert('EXPORT');
-                // });
+                var port = window.location.port;
+
                 obj.app.visualization.get(obj.chartId).then(function(vis){
-                    vis.table.exportData(exportOpts).then(function (reply) {
-                       console.log("EXPORT REPLY: ", reply);
+                    vis.table.exportData(exportOpts, function (result) {
+                       console.log("Download Path: ", result);
+                       alert(`File downloaded to :  http://localhost:${port}${result}`);
                     });
                 });
             }
