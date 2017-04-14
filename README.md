@@ -37,5 +37,5 @@ Example: IF(Country='USA' and GetPossibleCount("USRegion") = 1 and GetPossibleCo
 ###How It Works:
 If the IF conditional of a chart results in 1, it is shown. If it is 0, it is hidden. If there are more than one visualization condition resulting in 1, or all conditions result in 0, then a default visualization is shown.
 
-### BY RAJESH PILLAI
-Added export feature (1st release)
+###Revisions: BY RAJESH PILLAI
+###-Added export feature (1st release)
