@@ -1,9 +1,11 @@
 define([
     'js/qlik',
     './properties',
-    'text!./dialog-template.ng.html'
+    './libs/picomodal',
+    'css!./libs/styles.css'
     ],
-    function (qlik, properties, dialogTemplate) {
+    function (qlik, properties, picoModal) {
+        //alert(RvVanillaModal);
         var obj =  {
             initialProperties: {conditionalVis: [], defaultMasterObject: ''},
             support : {
@@ -12,7 +14,7 @@ define([
             },
         definition: properties,
         template: '<div style="display:block;  width:100%; height:100%; overflow:visible;"></div>',
-        controller: function ($scope, $element, luiDialog) {
+        controller: function ($scope, $element) {
             // Make sure the selections bar can overlay the extension's boundaries
             $(".qv-object .qv-inner-object").css('overflow','visible');
 
@@ -20,7 +22,6 @@ define([
             $scope.app = qlik.currApp();
 
             obj.app = qlik.currApp();  //todo: RP
-            obj.luiDialog = luiDialog;
 
             $scope.currentChart = getActiveVisID($scope.component.model.layout.conditionalVis);
             $scope.currentChartModel = null;
@@ -173,23 +174,30 @@ define([
                 vis.table.exportData(exportOpts, function (result) {
                    console.log("Download Path: ", result);
                    var path = `http://localhost:${port}${result}`;
-                   obj.showDialog(obj.luiDialog, path);
+                   obj.showDialog( path);
                 });
             });
         },
-
-        showDialog: function (luiDialog, path) {
-            luiDialog.show({
-                    template: dialogTemplate,
-                    input: {
-                        title: "Export",
-                        name: "Data successfully exported."
-                    },
-                    controller: ['$scope', function( $scope ) {
-                        $scope.text = `Click the following link to download the file.`;
-                        $scope.url = path;
-                    }]
+        showDialog: function ( path) {
+            picoModal({
+                content: `<div style='min-width:400px;font-size:1.3em'>`  +
+                    `<h3>EXPORT</h3>` +
+                    `<p>Data successfully exported!</p>` +
+                    `Click <a href='${path}'>here</a> to download.` +
+                    `<p class='footer'>`+
+                    `<button class='ok' style='float:right'>Close</button>` +
+                    `</p>` +
+                    `</div>`,
+                overlayClose: false
+            }).afterCreate(modal => {
+                modal.modalElem().addEventListener("click", evt => {
+                    if (evt.target && evt.target.matches(".ok")) {
+                        modal.close(true);
+                    } else if (evt.target && evt.target.matches(".cancel")) {
+                        modal.close();
+                    }
                 });
+            }).show();
         }
     }
 
