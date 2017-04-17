@@ -4,12 +4,12 @@ define([
     'text!./dialog-template.ng.html'
     ],
     function (qlik, properties, dialogTemplate) {
-    var obj =  {
-        initialProperties: {conditionalVis: [], defaultMasterObject: ''},
-        support : {
-            exportData: true,
-            snapshot: true
-        },
+        var obj =  {
+            initialProperties: {conditionalVis: [], defaultMasterObject: ''},
+            support : {
+                exportData: true,
+                snapshot: true
+            },
         definition: properties,
         template: '<div style="display:block;  width:100%; height:100%; overflow:visible;"></div>',
         controller: function ($scope, $element, luiDialog) {
@@ -30,21 +30,6 @@ define([
 
             //RP: Store the chart ID for later use.
             obj.chartId = chart;
-
-            // TODO: RP: NOt used method. Only for reference
-            $scope.export = function(model) {
-                var exportOpts = {
-                    //format: $scope.layout.props.exportFormat,
-                    //state: $scope.layout.props.exportState,
-                    filename: 'e:/temp/', //$scope.layout.props.exportFileName,
-                    download: true
-                };
-                var table = new qlik.table(model);
-                table.exportData(exportOpts, function (reply) {
-                    console.log("EXPORT REPLY: ", reply);
-                    alert('EXPORT');
-                });
-            }
 
             // If we do have a chart ID, render the object.
             if($scope.currentChart) {
@@ -152,9 +137,6 @@ define([
                 return p;
             };
 
-
-
-
         },
         paint: function ($element, $layout) {
             return qlik.Promise.resolve();
@@ -163,7 +145,7 @@ define([
             return false; // We do not need to handle resizes in this extension as the charts will resize themselves.
         },
 
-        //todo:RP
+        //RP: This method is invoked when the export popup is clicked.
         getExportRawDataOptions: function (a, c, e) {
             var self = this;
             console.log("c: ", c);
@@ -178,8 +160,8 @@ define([
                         }
                     }), void e.resolve();
         },
-        export: function(model) {
 
+        export: function(model) {
             var exportOpts = {
                 download: true,
                 filename: model.layout.title
@@ -190,13 +172,12 @@ define([
             obj.app.visualization.get(obj.chartId).then(function(vis){
                 vis.table.exportData(exportOpts, function (result) {
                    console.log("Download Path: ", result);
-
                    var path = `http://localhost:${port}${result}`;
                    obj.showDialog(obj.luiDialog, path);
-                   //alert(`File downloaded to :  ${path}`);
                 });
             });
         },
+
         showDialog: function (luiDialog, path) {
             luiDialog.show({
                     template: dialogTemplate,
