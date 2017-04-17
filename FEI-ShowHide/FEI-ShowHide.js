@@ -1,4 +1,9 @@
-define(['js/qlik', './properties'], function (qlik, properties) {
+define([
+    'js/qlik',
+    './properties',
+    'text!./dialog-template.ng.html'
+    ],
+    function (qlik, properties, dialogTemplate) {
     var obj =  {
         initialProperties: {conditionalVis: [], defaultMasterObject: ''},
         support : {
@@ -7,7 +12,7 @@ define(['js/qlik', './properties'], function (qlik, properties) {
         },
         definition: properties,
         template: '<div style="display:block;  width:100%; height:100%; overflow:visible;"></div>',
-        controller: function ($scope, $element) {
+        controller: function ($scope, $element, luiDialog) {
             // Make sure the selections bar can overlay the extension's boundaries
             $(".qv-object .qv-inner-object").css('overflow','visible');
 
@@ -15,6 +20,7 @@ define(['js/qlik', './properties'], function (qlik, properties) {
             $scope.app = qlik.currApp();
 
             obj.app = qlik.currApp();  //todo: RP
+            obj.luiDialog = luiDialog;
 
             $scope.currentChart = getActiveVisID($scope.component.model.layout.conditionalVis);
             $scope.currentChartModel = null;
@@ -174,20 +180,36 @@ define(['js/qlik', './properties'], function (qlik, properties) {
         },
         export: function(model) {
 
-                var exportOpts = {
-                    download: true,
-                    filename: model.layout.title
-                };
+            var exportOpts = {
+                download: true,
+                filename: model.layout.title
+            };
 
-                var port = window.location.port;
+            var port = window.location.port;
 
-                obj.app.visualization.get(obj.chartId).then(function(vis){
-                    vis.table.exportData(exportOpts, function (result) {
-                       console.log("Download Path: ", result);
-                       alert(`File downloaded to :  http://localhost:${port}${result}`);
-                    });
+            obj.app.visualization.get(obj.chartId).then(function(vis){
+                vis.table.exportData(exportOpts, function (result) {
+                   console.log("Download Path: ", result);
+
+                   var path = `http://localhost:${port}${result}`;
+                   obj.showDialog(obj.luiDialog, path);
+                   //alert(`File downloaded to :  ${path}`);
                 });
-            }
+            });
+        },
+        showDialog: function (luiDialog, path) {
+            luiDialog.show({
+                    template: dialogTemplate,
+                    input: {
+                        title: "Export",
+                        name: "Data successfully exported."
+                    },
+                    controller: ['$scope', function( $scope ) {
+                        $scope.text = `Click the following link to download the file.`;
+                        $scope.url = path;
+                    }]
+                });
+        }
     }
 
     return obj;
