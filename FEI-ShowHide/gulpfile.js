@@ -9,9 +9,9 @@ var gulp = require('gulp'),
     runSequence = require('run-sequence');
 
 gulp.task('minifycss', function () {
-  gulp.src('libs/*.css')
+  gulp.src('libs/*.css', {base: '.'})
     .pipe(minifyCSS({ keepBreaks: false }))
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('showhide-dist'));
 });
 
 gulp.task('minifyjs', function () {
@@ -20,16 +20,16 @@ gulp.task('minifyjs', function () {
     .pipe(ignore.exclude(["**/*.map"]))
     .pipe(babel({presets: ['es2015']}))
     .pipe(uglify().on('error', gutil.log))
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('showhide-dist'));
 });
 
 gulp.task('copy', function () {
   gulp.src(['FEI-ShowHide.qext','FEI-ShowHide.png', 'properties.js', 'wbfolder.wbl'])
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('showhide-dist'));
 });
 
 gulp.task('cleanup', function (){
-  return del('dist/**', {force: true});
+  return del('showhide-dist/**', {force: true});
 });
 
 gulp.task('prod', function () {
